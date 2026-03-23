@@ -45,36 +45,51 @@ Users can upload files from Salesforce, which are then sent to **Cloudinary via 
 Example Apex code used to send files to Cloudinary.
 
 ```apex
-public with sharing class CloudinaryUploadController {
+public class ImageUploadController {
 
-    @AuraEnabled
-    public static String uploadImage(String base64Data) {
+     @AuraEnabled
+    public static String uploadImage(String base64Data, String fileName) {
+
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('https://console.cloudinary.com/');
+        req.setMethod('POST');
+        req.setHeader('Content-Type', 'application/json');
+
+        // 🔐 AUTH MANUALLY (Bearer Token Example)
+        req.setHeader(
+            'Authorization',
+            '731682483164476'
+        );
+
+        Map<String, Object> body = new Map<String, Object>();
+        body.put('fileName', fileName);
+        body.put('fileData', base64Data);
+
+        req.setBody(JSON.serialize(body));
 
         Http http = new Http();
-        HttpRequest req = new HttpRequest();
-
-        req.setEndpoint('https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload');
-        req.setMethod('POST');
-        req.setHeader('Content-Type','application/json');
-
-        String requestBody = '{"file":"data:image/png;base64,' + base64Data + '","upload_preset":"YOUR_UPLOAD_PRESET"}';
-
-        req.setBody(requestBody);
-
         HttpResponse res = http.send(req);
 
-        if(res.getStatusCode() == 200){
+        if (res.getStatusCode() == 200 || res.getStatusCode() == 201) {
 
-            Map<String,Object> responseData =
-            (Map<String,Object>) JSON.deserializeUntyped(res.getBody());
+            Map<String, Object> result =
+                (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 
-            String imageUrl = (String) responseData.get('secure_url');
+            String imageUrl = (String) result.get('imageUrl');
+
+            // Save URL in Salesforce
+            Image_Record__c img = new Image_Record__c();
+            img.Image_URL__c = imageUrl;
+            insert img;
 
             return imageUrl;
+        } else {
+            throw new AuraHandledException(
+                'Error from API: ' + res.getBody()
+            );
         }
-
-        return 'Upload Failed';
     }
+    
 }
 ```
 
