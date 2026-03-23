@@ -86,8 +86,58 @@ Example Lightning Web Component HTML snippet used to display the uploaded Cloudi
 
 ```html
 <template>
-    <lightning-card title="Uploaded Image">
-        <img src={imageUrl} style="max-width:400px;" />
+    <lightning-card title="Upload Image to Cloudinary" icon-name="utility:upload">
+        <div class="slds-p-around_medium">
+
+            <!-- File Selector -->
+            <lightning-input 
+                type="file"
+                label="Choose Image"
+                accept="image/*"
+                onchange={handleFileChange}>
+            </lightning-input>
+
+            <!-- File Details -->
+            <template if:true={fileName}>
+                <div class="slds-box slds-theme_default slds-m-top_small">
+                    <p class="slds-text-title_bold">Selected File</p>
+                    <p>{fileName}</p>
+                    <p class="slds-text-color_weak">{fileSizeKB} KB</p>
+                </div>
+                <p>{fileReadyMessage}</p>
+            </template>
+
+            <!-- Upload Button -->
+            <div class="slds-m-top_medium">
+                <lightning-button 
+                    label="Upload Image"
+                    variant="brand"
+                    icon-name="utility:upload"
+                    onclick={uploadImage}
+                    disabled={isUploading}>
+                </lightning-button>
+            </div>
+
+            <!-- Uploading Spinner -->
+            <template if:true={isUploading}>
+                <div class="slds-m-top_medium slds-align_absolute-center">
+                    <lightning-spinner alternative-text="Uploading" size="medium"></lightning-spinner>
+                </div>
+                <p class="slds-text-align_center slds-m-top_small">Uploading Image...</p>
+            </template>
+
+            <!-- Success Preview -->
+            <template if:true={imageUrl}>
+                <div class="slds-box slds-theme_success slds-m-top_medium">
+                    <p class="slds-text-heading_small">Upload Successful</p>
+                </div>
+
+                <div class="slds-m-top_medium slds-align_absolute-center">
+                    <img src={imageUrl} style="max-width:250px; border-radius:6px;" />
+                </div>
+            </template>
+
+        </div>
     </lightning-card>
 </template>
 ```
